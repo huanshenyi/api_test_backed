@@ -19,4 +19,5 @@ from django.urls import path, include
 urlpatterns = [
     # auth/login
     path('auth/', include("apps.autoauth.urls")),
+    path("", include("apps.apitest.urls"))
 ]
