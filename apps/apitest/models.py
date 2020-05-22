@@ -27,3 +27,44 @@ class Host(models.Model):
     host = models.CharField(max_length=1024, verbose_name="hostアドレス")
     description = models.CharField(max_length=1024, blank=True, null=True, verbose_name="詳細")
     project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name="所属プロジェクト", related_name="host_list")
+
+
+class Api(models.Model):
+    """
+    Apiデータ
+    """
+    STATUS_CODE_CHOICE = (
+        ("200", "200"),
+        ("201", "201"),
+        ("202", "202"),
+        ("203", "203"),
+        ("204", "204"),
+        ("301", "301"),
+        ("302", "302"),
+        ("400", "400"),
+        ("401", "401"),
+        ("403", "403"),
+        ("404", "404"),
+        ("405", "405"),
+        ("406", "406"),
+        ("407", "407"),
+        ("408", "408"),
+        ("500", "500"),
+        ("502", "502")
+    )
+    HTTP_METHOD_CHOICE = (
+        ("POST", "POST"),
+        ("GET", "GET"),
+        ("PUT", "PUT"),
+        ("DELETE", "DELETE"),
+    )
+    name = models.CharField(max_length=50, verbose_name="api名称")
+    http_method = models.CharField(max_length=50, verbose_name="Method", choices=HTTP_METHOD_CHOICE)
+    host = models.ForeignKey(Host, on_delete=models.CASCADE, verbose_name="host")
+    path = models.CharField(max_length=1024, verbose_name="apiアドレス")
+    headers = models.TextField(null=True, blank=True, verbose_name="リクエストヘット")
+    data = models.TextField(null=True, blank=True, verbose_name="提出データ")
+    description = models.CharField(max_length=1024, blank=True, null=True, verbose_name="詳細")
+    expect_code = models.CharField(null=True, max_length=10, verbose_name="希望リスポンスcode", choices=STATUS_CODE_CHOICE)
+    expect_content = models.CharField(null=True, max_length=200, verbose_name="希望リスポンスbody", blank=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name="プロダクト", related_name="api_list", null=True)

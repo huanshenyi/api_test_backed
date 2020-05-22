@@ -5,6 +5,7 @@ from . import views
 router = DefaultRouter(trailing_slash=False)
 router.register("project", views.ProjectViewSets, basename="project")
 router.register("host", views.HostViewSets, basename="host")
+router.register("api", views.ApiViewSets, basename="api")
 
 app_name = "apitest"
 urlpatterns = [
