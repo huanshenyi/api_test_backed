@@ -1,6 +1,14 @@
 from django.db import models
 from django.contrib.auth import get_user_model
+
 User = get_user_model()
+
+HTTP_METHOD_CHOICE = (
+    ("POST", "POST"),
+    ("GET", "GET"),
+    ("PUT", "PUT"),
+    ("DELETE", "DELETE"),
+)
 
 
 class Project(models.Model):
@@ -52,12 +60,6 @@ class Api(models.Model):
         ("500", "500"),
         ("502", "502")
     )
-    HTTP_METHOD_CHOICE = (
-        ("POST", "POST"),
-        ("GET", "GET"),
-        ("PUT", "PUT"),
-        ("DELETE", "DELETE"),
-    )
     name = models.CharField(max_length=50, verbose_name="api名称")
     http_method = models.CharField(max_length=50, verbose_name="Method", choices=HTTP_METHOD_CHOICE)
     host = models.ForeignKey(Host, on_delete=models.CASCADE, verbose_name="host")
@@ -67,4 +69,23 @@ class Api(models.Model):
     description = models.CharField(max_length=1024, blank=True, null=True, verbose_name="詳細")
     expect_code = models.CharField(null=True, max_length=10, verbose_name="希望リスポンスcode", choices=STATUS_CODE_CHOICE)
     expect_content = models.CharField(null=True, max_length=200, verbose_name="希望リスポンスbody", blank=True)
-    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name="プロダクト", related_name="api_list", null=True)
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name="プロダクト", related_name="api_list",
+                                null=True)
+
+
+class ApiRunRecord(models.Model):
+    """
+    Api実行記録
+    """
+    url = models.CharField(max_length=200, verbose_name="リクエストurl")
+    http_method = models.CharField(max_length=10, verbose_name="リクエストメソッド", choices=HTTP_METHOD_CHOICE)
+    data = models.TextField(null=True, verbose_name="提出データ")
+    headers = models.TextField(null=True, verbose_name="提出header")
+    create_time = models.DateTimeField(auto_now=True, verbose_name="実行時間")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="実行者")
+    return_code = models.CharField(max_length=10, verbose_name="レスポンスcode")
+    return_content = models.TextField(null=True, verbose_name="レスポンス内容")
+    api = models.ForeignKey(Api, on_delete=models.CASCADE, verbose_name="関連API", null=True)
+
+    class Meta:
+        ordering = ["-create_time"]
