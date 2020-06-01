@@ -16,7 +16,7 @@ def request(api):
     host = api.host.host
     method = api.http_method
     path = api.path
-    url = parse.urlparse(host, path)
+    url = parse.urljoin(host, path)
     data = {}
     if api.data:
         data_list = json.loads(api.data, encoding="utf-8")

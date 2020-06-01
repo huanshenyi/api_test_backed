@@ -89,3 +89,39 @@ class ApiRunRecord(models.Model):
 
     class Meta:
         ordering = ["-create_time"]
+
+
+class Case(models.Model):
+    """
+    テストケース
+    """
+    project = models.ForeignKey(Project, on_delete=models.CASCADE, verbose_name="所属プロジェクト", related_name="case_list")
+    name = models.CharField(max_length=50, verbose_name="ケース名")
+    api_list = models.ManyToManyField(Api, related_name="case_list")
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, verbose_name="制作者")
+    description = models.CharField(max_length=1024, blank=True, null=True, verbose_name="詳細")
+    create_time = models.DateTimeField(auto_now=True, verbose_name="更新時間")
+
+
+class CaseArgument(models.Model):
+    """
+    ケースのパラメータ
+    """
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, verbose_name="テストケース", related_name="arguments")
+    name = models.CharField(max_length=100, verbose_name="パラメータ名")
+    value = models.CharField(max_length=100, verbose_name="パラメータ値")
+
+
+class ApiArgument(models.Model):
+    """
+    ケースのAPIパラメータ
+    """
+    ARGUMENT_ORIGIN_CHOICE = (
+        ("HEADER", "HEADER"),
+        ("BODY", "BODY"),
+        ("COOKIE", "COOKIE"),
+    )
+    api = models.ForeignKey(Api, on_delete=models.CASCADE, verbose_name="ケースAPI", null=True, related_name="arguments")
+    name = models.CharField(max_length=100, verbose_name="パラメータ名")
+    origin = models.CharField(max_length=20, choices=ARGUMENT_ORIGIN_CHOICE, verbose_name="パラメータ出所")
+    format = models.CharField(max_length=100, verbose_name="パラメータ取得形式")

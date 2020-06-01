@@ -34,12 +34,15 @@ class RunApiView(views.APIView):
     """
     APIを実行する
     """
+    authentication_classes = [JWTAuthentication, ]
+    permission_classes = [IsAuthenticated, ]
+
     def post(self, request, api_id):
         api = Api.objects.get(pk=api_id)
         resp = api_request(api)
         recode = ApiRunRecord.objects.create(
             url=resp.url,
-            http_method=resp.request.http_method,
+            http_method=resp.request.method,
             return_code=resp.status_code,
             return_content=resp.text,
             data=resp.request.body,
