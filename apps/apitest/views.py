@@ -1,9 +1,10 @@
 from django.shortcuts import render
-from rest_framework import viewsets, views
+from rest_framework import viewsets, views, status
 from rest_framework.response import Response
-from .models import Project, Host, Api, ApiRunRecord
+from .models import Project, Host, Api, ApiRunRecord, Case, CaseArgument, ApiArgument
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ProjectSerializer, HostSerializer, ApiSerializer, ApiRunRecordSerializer
+from .serializers import ProjectSerializer, HostSerializer, ApiSerializer, ApiRunRecordSerializer,\
+    CaseArgumentSerializer, CaseSerializer
 from apps.autoauth.authorizations import JWTAuthentication
 
 from .apirequest import request as api_request
@@ -52,6 +53,58 @@ class RunApiView(views.APIView):
         )
         serializer = ApiRunRecordSerializer(recode)
         return Response(serializer.data)
+
+
+class CaseView(views.APIView):
+    authentication_classes = [JWTAuthentication, ]
+    permission_classes = [IsAuthenticated, ]
+
+    def post(self, request, *args, **kwargs):
+        serializer = CaseSerializer(data=request.data)
+        if serializer.is_valid():
+            name = request.data.get("name")
+            arguments = request.data.get("arguments")
+            api_list = request.data.get("api_list")
+            description = request.data.get("description")
+            project_id = request.data.get("project_id")
+            # ケースを新規追加
+            case = Case.objects.create(
+                name=name,
+                description=description,
+                user=request.user,
+                project_id=project_id
+            )
+            # テストケースのパラメータ処理
+            if arguments:
+                for argument in arguments:
+                    CaseArgument.objects.create(
+                        name=argument["name"],
+                        value=argument["value"],
+                        case=case
+                    )
+            # APIリスト処理
+            if api_list:
+                api_list = sorted(api_list, key=lambda x: x["index"])
+                for api in api_list:
+                    api_model = Api.objects.get(pk=api["id"])
+                    case.api_list.add(api_model)
+                    api_arguments = api["arguments"]
+                    if arguments:
+                        for api_argument in arguments:
+                            ApiArgument.objects.create(
+                                name=api_arguments["name"],
+                                origin=api_argument["origin"],
+                                format=api_argument["format"],
+                                api=api_model
+                            )
+            case.save()
+            return Response(CaseSerializer(case).data)
+
+
+
+        else:
+            print(serializer.errors)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
 
 
 
