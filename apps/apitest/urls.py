@@ -10,5 +10,7 @@ router.register("api", views.ApiViewSets, basename="api")
 
 app_name = "apitest"
 urlpatterns = [
-   path('run/api/<int:api_id>', views.RunApiView.as_view(), name="run_api")
+   path('run/api/<int:api_id>', views.RunApiView.as_view(), name="run_api"),
+   path('case', views.CaseView.as_view(), name="case"),
+   path('case/<int:case_id>', views.CaseView.as_view(), name="edit_case")
 ] + router.urls

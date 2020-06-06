@@ -37,23 +37,6 @@ class ApiSerializer(serializers.ModelSerializer):
         fields = "__all__"
 
 
-class ProjectSerializer(serializers.ModelSerializer):
-    """
-    プロジェクトserializers
-    """
-    id = serializers.IntegerField(read_only=True)
-    last_update_time = serializers.DateTimeField(read_only=True)
-    create_time = serializers.DateTimeField(read_only=True)
-    user = UserSerializer(read_only=True)
-    host_list = HostSerializer(many=True, read_only=True)
-    api_list = ApiSerializer(many=True, read_only=True)
-
-    class Meta:
-        model = Project
-        fields = ["id", "name", "type", "description", "last_update_time", "create_time", "user", "host_list",
-                  "api_list"]
-
-
 class ApiRunRecordSerializer(serializers.ModelSerializer):
     api = ApiSerializer()
 
@@ -77,14 +60,31 @@ class CaseSerializer(serializers.ModelSerializer):
     """
     テストケース
     """
-    project = serializers.IntegerField(write_only=True)
+    project_id = serializers.IntegerField(write_only=True)
     api_list = ApiSerializer(many=True, read_only=True)
     arguments = CaseArgumentSerializer(many=True, read_only=True)
 
     class Meta:
         model = Case
         # 排除
-        exclude = ["user"]
+        exclude = ["user", "project"]
 
+
+class ProjectSerializer(serializers.ModelSerializer):
+    """
+    プロジェクトserializers
+    """
+    id = serializers.IntegerField(read_only=True)
+    last_update_time = serializers.DateTimeField(read_only=True)
+    create_time = serializers.DateTimeField(read_only=True)
+    user = UserSerializer(read_only=True)
+    host_list = HostSerializer(many=True, read_only=True)
+    api_list = ApiSerializer(many=True, read_only=True)
+    case_list = CaseSerializer(many=True, read_only=True)
+
+    class Meta:
+        model = Project
+        fields = ["id", "name", "type", "description", "last_update_time", "create_time", "user", "host_list",
+                  "api_list", "case_list"]
 
 

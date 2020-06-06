@@ -3,7 +3,7 @@ from rest_framework import viewsets, views, status
 from rest_framework.response import Response
 from .models import Project, Host, Api, ApiRunRecord, Case, CaseArgument, ApiArgument
 from rest_framework.permissions import IsAuthenticated
-from .serializers import ProjectSerializer, HostSerializer, ApiSerializer, ApiRunRecordSerializer,\
+from .serializers import ProjectSerializer, HostSerializer, ApiSerializer, ApiRunRecordSerializer, \
     CaseArgumentSerializer, CaseSerializer
 from apps.autoauth.authorizations import JWTAuthentication
 
@@ -60,6 +60,9 @@ class CaseView(views.APIView):
     permission_classes = [IsAuthenticated, ]
 
     def post(self, request, *args, **kwargs):
+        """
+        ケースの追加
+        """
         serializer = CaseSerializer(data=request.data)
         if serializer.is_valid():
             name = request.data.get("name")
@@ -89,22 +92,96 @@ class CaseView(views.APIView):
                     api_model = Api.objects.get(pk=api["id"])
                     case.api_list.add(api_model)
                     api_arguments = api["arguments"]
-                    if arguments:
-                        for api_argument in arguments:
+                    print(api_arguments)
+                    if api_arguments:
+                        for api_argument in api_arguments:
                             ApiArgument.objects.create(
-                                name=api_arguments["name"],
+                                name=api_argument["name"],
                                 origin=api_argument["origin"],
                                 format=api_argument["format"],
                                 api=api_model
                             )
             case.save()
             return Response(CaseSerializer(case).data)
-
-
-
         else:
             print(serializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
 
+    def put(self, request, case_id):
+        """
+        ケース修正
+        """
+        serializer = CaseSerializer(data=request.data)
+        if serializer.is_valid():
+            name = request.data.get("name")
+            arguments = request.data.get("arguments")
+            api_list = request.data.get("api_list")
+            description = request.data.get("description")
 
+            case = Case.objects.get(pk=case_id)
+            case.name = name
+            case.description = description
 
+            # テストケースのパラメータ処理
+            if arguments:
+                argument_model_list = []
+                for argument in arguments:
+                    argument_id = argument["id"]
+                    if argument_id:
+                        argument_model = CaseArgument.objects.get(pk=argument_id)
+                        argument_model.name = argument["name"]
+                        argument_model.value = argument["value"]
+                        argument_model.save()
+                        argument_model_list.append(argument_model)
+                    else:
+                        print("koko")
+                        argument_model = CaseArgument.objects.create(
+                            name=argument["name"],
+                            value=argument["value"],
+                            case=case
+                        )
+                    argument_model_list.append(argument_model)
+                # 改めて値を渡す
+                case.arguments.set(argument_model_list)
+            else:
+                case.arguments.set([])
+            # APIとAPIのパラメータ処理
+            if api_list:
+                api_model_list = []
+                for api in api_list:
+                    api_model = Api.objects.get(pk=api["id"])
+                    api_arguments = api["arguments"]
+                    # APIのパラメータ処理
+                    if api_arguments:
+                        argument_model_list = []
+                        for api_argument in api_arguments:
+                            argument_id = api_argument["id"]
+                            if argument_id:
+                                argument_model = ApiArgument.objects.get(pk=argument_id)
+                                argument_model.name = api_argument["name"]
+                                argument_model.origin = api_argument["origin"]
+                                argument_model.format = api_argument["format"]
+                                argument_model.save()
+                            else:
+                                argument_model = CaseArgument.objects.create(
+                                    name=api_argument["name"],
+                                    origin=api_argument["origin"],
+                                    format=api_argument["format"],
+                                    case=case
+                                )
+                            argument_model_list.append(argument_model)
+                        api_model.arguments.set(argument_model_list)
+                    else:
+                        api_model.arguments.set([])
+                    # apiのパラメータ処理後の再度保存
+                    api_model.save()
+                    api_model_list.append(api_model)
+                case.api_list.set(api_model_list)
+            else:
+                case.api_list.set([])
+            # 再度保存
+            case.save()
+            return Response(CaseSerializer(case).data)
+        else:
+            print(serializer.errors)
+            return Response(status=status.HTTP_400_BAD_REQUEST)
