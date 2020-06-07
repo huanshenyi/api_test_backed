@@ -185,3 +185,8 @@ class CaseView(views.APIView):
         else:
             print(serializer.errors)
             return Response(status=status.HTTP_400_BAD_REQUEST)
+
+
+class RunCaseView(views.APIView):
+    def post(self, request, case_id):
+        pass
