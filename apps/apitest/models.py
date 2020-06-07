@@ -125,3 +125,31 @@ class ApiArgument(models.Model):
     name = models.CharField(max_length=100, verbose_name="パラメータ名")
     origin = models.CharField(max_length=20, choices=ARGUMENT_ORIGIN_CHOICE, verbose_name="パラメータ出所")
     format = models.CharField(max_length=100, verbose_name="パラメータ取得形式")
+
+
+class CaseRunRecord(models.Model):
+    """
+    ケースの実行記録
+    """
+    case = models.ForeignKey(Case, on_delete=models.CASCADE, verbose_name="所属ケース")
+    create_time = models.DateTimeField(auto_now=True, verbose_name="実行時間")
+
+    class Meta:
+        ordering = ['-create_time']
+
+
+class CaseApiRunRecord(models.Model):
+    """
+     Case API実行記録
+    """
+    url = models.CharField(max_length=200, verbose_name="リクエストurl")
+    http_method = models.CharField(max_length=10, verbose_name="メソッド", choices=HTTP_METHOD_CHOICE)
+    headers = models.TextField(null=True, verbose_name="リクエストヘッド")
+    data = models.TextField(null=True, verbose_name="提出データ")
+    create_time = models.DateTimeField(auto_now=True, verbose_name="実行時間")
+    user = models.ForeignKey(User, on_delete=models.CASCADE, verbose_name="実行者")
+    return_code = models.CharField(max_length=10, verbose_name="リスポンスcode")
+    return_content = models.TextField(null=True, verbose_name="リスポンス内容")
+    api = models.ForeignKey(Api, on_delete=models.CASCADE, verbose_name="関連API", null=True)
+    case_record = models.ForeignKey(CaseRunRecord, on_delete=models.CASCADE, verbose_name="関連するケース実行記録",
+                                    related_name="api_records")

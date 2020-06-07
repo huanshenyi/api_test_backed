@@ -2,7 +2,7 @@ __author__ = "ハリネズミ"
 
 from rest_framework import serializers
 from apps.autoauth.serializers import UserSerializer
-from .models import Project, Host, Api, ApiRunRecord, CaseArgument, Case, ApiArgument
+from .models import Project, Host, Api, ApiRunRecord, CaseArgument, Case, ApiArgument, CaseApiRunRecord, CaseRunRecord
 
 
 class HostSerializer(serializers.ModelSerializer):
@@ -88,3 +88,18 @@ class ProjectSerializer(serializers.ModelSerializer):
                   "api_list", "case_list"]
 
 
+class CaseApiRunRecordSerializer(serializers.ModelSerializer):
+    api = ApiSerializer()
+
+    class Meta:
+        model = CaseApiRunRecord
+        fields = "__all__"
+
+
+class CaseRunRecordSerializer(serializers.ModelSerializer):
+    api_records = CaseApiRunRecordSerializer(many=True)
+    case = CaseSerializer()
+
+    class Meta:
+        model = CaseRunRecord
+        fields = "__all__"
