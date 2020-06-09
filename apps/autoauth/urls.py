@@ -7,5 +7,6 @@ app_name = "autoauth"
 
 urlpatterns = [
     path('login', views.LoginView.as_view(), name="login"),
+
 ]
 

@@ -1,11 +1,12 @@
 from django.shortcuts import render
 from rest_framework import viewsets, views, status
 from rest_framework.response import Response
-from .models import Project, Host, Api, ApiRunRecord, Case, CaseArgument, ApiArgument
+from .models import Project, Host, Api, ApiRunRecord, Case, CaseArgument, ApiArgument, CaseRunRecord, CaseApiRunRecord
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ProjectSerializer, HostSerializer, ApiSerializer, ApiRunRecordSerializer, \
-    CaseArgumentSerializer, CaseSerializer
+    CaseArgumentSerializer, CaseSerializer, CaseRunRecordSerializer
 from apps.autoauth.authorizations import JWTAuthentication
+from utils import dictor
 
 from .apirequest import request as api_request
 
@@ -188,5 +189,53 @@ class CaseView(views.APIView):
 
 
 class RunCaseView(views.APIView):
+    """
+    テストケースの実行記録
+    """
+    authentication_classes = [JWTAuthentication, ]
+    permission_classes = [IsAuthenticated, ]
+
     def post(self, request, case_id):
-        pass
+        case = Case.objects.get(pk=case_id)
+        case_arguments = CaseArgument.objects.filter(case=case)
+        case_record = CaseRunRecord.objects.create(case=case)
+
+        global_arguments = {}
+        # テストケースのパラメータを追加
+        for case_argument in case_arguments:
+            global_arguments[case_argument.name] = case_argument.value
+
+        # API実行&APIパラメータを追加
+        api_model_list = case.api_list.all()
+        for api_model in api_model_list:
+            resp = api_request(api_model, global_arguments)
+            CaseApiRunRecord.objects.create(
+                url=resp.url,
+                http_method=resp.request.method,
+                data=resp.request.body,
+                headers=resp.request.headers,
+                user=request.user,
+                return_code=resp.status_code,
+                return_content=resp.text,
+                api=api_model,
+                case_record=case_record
+            )
+            # API実行後、必要なパラメータを取得
+            api_arguments = api_model.arguments.all()
+            if api_arguments:
+                for api_argument in api_arguments:
+                    dictor_data = {}
+                    if api_argument.origin == "HEAD":
+                        dictor_data = resp.headers
+                    elif api_argument.origin == "COOKIE":
+                        dictor_data = resp.cookies
+                    elif api_argument.origin == "BODY":
+                        dictor_data = resp.json()
+                    argument_value = dictor.dictor(dictor_data, api_argument.format)
+                    global_arguments[api_argument.name] = argument_value
+                    # {"token":"xxx"} => token
+        serializer = CaseRunRecordSerializer(case_record)
+        return Response(serializer.data)
+
+
+
