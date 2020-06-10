@@ -14,5 +14,5 @@ urlpatterns = [
    path('run/case/<int:case_id>', views.RunCaseView.as_view(), name="run_case"),
    path('case', views.CaseView.as_view(), name="case"),
    path('case/<int:case_id>', views.CaseView.as_view(), name="edit_case"),
-
+   path("record", views.RecordView.as_view(), name="record")
 ] + router.urls

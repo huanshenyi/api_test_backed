@@ -5,7 +5,7 @@ import json
 import re
 
 
-def _replace_argument(target_str, arguments):
+def _replace_argument(target_str, arguments=None):
     # {"project_id":2, "token":"xxx"}
     # /project/{{ project_id }}
     if not arguments:
@@ -16,7 +16,7 @@ def _replace_argument(target_str, arguments):
             break
         argument_name = search_result.group(1)
         if argument_name in arguments:
-            re.sub("{{"+argument_name+"}}", arguments[argument_name], target_str)
+            target_str = re.sub("{{"+argument_name+"}}", arguments[argument_name], target_str)
         else:
             target_str = re.sub("{{"+argument_name+"}}", argument_name, target_str)
     return target_str

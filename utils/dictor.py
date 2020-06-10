@@ -1,4 +1,3 @@
-__author__ = "ハリネズミ"
 from __future__ import print_function
 import json
 

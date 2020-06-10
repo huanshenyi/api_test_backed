@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from .models import Project, Host, Api, ApiRunRecord, Case, CaseArgument, ApiArgument, CaseRunRecord, CaseApiRunRecord
 from rest_framework.permissions import IsAuthenticated
 from .serializers import ProjectSerializer, HostSerializer, ApiSerializer, ApiRunRecordSerializer, \
-    CaseArgumentSerializer, CaseSerializer, CaseRunRecordSerializer
+    CaseArgumentSerializer, CaseSerializer, CaseRunRecordSerializer, CaseApiRunRecordSerializer
 from apps.autoauth.authorizations import JWTAuthentication
 from utils import dictor
 
@@ -236,6 +236,25 @@ class RunCaseView(views.APIView):
                     # {"token":"xxx"} => token
         serializer = CaseRunRecordSerializer(case_record)
         return Response(serializer.data)
+
+
+class RecordView(views.APIView):
+    """
+    Record 記録
+    """
+    def get(self, request):
+        record_type = request.GET.get("type")
+        project_id = request.GET.get("project")
+        if record_type == "api":
+            records = ApiRunRecord.objects.filter(api__project_id=project_id)
+            serializer = ApiRunRecordSerializer(records, many=True)
+            return Response(serializer.data)
+        else:
+            records = CaseRunRecord.objects.filter(case__project_id=project_id)
+            serializer = CaseRunRecordSerializer(records, many=True)
+            return Response(serializer.data)
+
+
 
 
 
