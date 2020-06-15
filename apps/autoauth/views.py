@@ -36,6 +36,16 @@ class UserView(views.APIView):
         serializer = UserSerializer(users, many=True)
         return Response(serializer.data)
 
+    def put(self, request):
+        user = request.user
+        user.username = request.data.get("username")
+        user.telephone = request.data.get("telephone", None)
+        user.email = request.data.get("email")
+        user.avatar = request.data.get("avatar")
+        user.save()
+        serializer = UserSerializer(user)
+        return Response(serializer.data)
+
 
 class AvatarUploadView(views.APIView):
     """
