@@ -11,6 +11,28 @@ from utils import dictor
 from .apirequest import request as api_request
 
 
+class IndexView(views.APIView):
+    """
+    ホームページ用のデータ
+    """
+    def get(self, request, *args, **kwargs):
+        project_count = Project.objects.count()
+        api_count = Api.objects.count()
+        case_count = Case.objects.count()
+        api_record_count = ApiRunRecord.objects.count()
+        case_record_count = CaseRunRecord.objects.count()
+        data = {
+            "count": {
+                "project": project_count,
+                "api": api_count,
+                "case": case_count,
+                "api_record": api_record_count,
+                "case_record": case_record_count
+            }
+        }
+        return Response(data)
+
+
 class ProjectViewSets(viewsets.ModelViewSet):
     queryset = Project.objects.all()
     authentication_classes = [JWTAuthentication, ]
